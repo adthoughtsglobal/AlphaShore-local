@@ -69,16 +69,23 @@ pc.ondatachannel = e => {
     }
   };
 };
-
 pc.onicecandidate = e => {
-  if (e.candidate) return;
+  if (e.candidate) {
+    console.log("New ICE Candidate:", e.candidate);
+  } else {
+    // No more candidates left, waiting for gathering to complete
+    console.log("All ICE candidates gathered.");
+  }
 };
 
 pc.onicegatheringstatechange = () => {
   if (pc.iceGatheringState === 'complete' && !isSender) {
-    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
+    console.log("ICE gathering completed, generating QR...");
+    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription))
+      .catch(err => console.error("QRCode generation error:", err));
   }
 };
+
 
 document.getElementById('startCamera').onclick = async () => {
   isSender = true;
@@ -113,15 +120,12 @@ document.getElementById('scanQR').onclick = () => {
     html5QrCode = new Html5Qrcode("camera");
   }
 };
-
 document.getElementById('generateQR').onclick = async () => {
   try {
     isSender = false;
     let offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    await waitForIceComplete();
     console.log("Generated Offer:", pc.localDescription);
-    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
   } catch (e) {
     console.error("QR Generation Failed:", e);
   }
@@ -129,17 +133,9 @@ document.getElementById('generateQR').onclick = async () => {
 
 
 function waitForIceComplete() {
-  return new Promise(resolve => {
-    if (pc.iceGatheringState === 'complete') return resolve();
-    const check = () => {
-      if (pc.iceGatheringState === 'complete') {
-        pc.removeEventListener('icegatheringstatechange', check);
-        resolve();
-      }
-    };
-    pc.addEventListener('icegatheringstatechange', check);
-  });
+  // No blocking or waiting
 }
+
 </script>
 
 </body>
