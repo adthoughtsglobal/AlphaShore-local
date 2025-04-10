@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receiver</title>
+  <script src="https://cdn.peerjs.com/0.3/peer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body>
+  <h2>Receiver</h2>
+  <div id="qrCode"></div> <!-- This will display the QR code -->
+  <textarea id="textArea" placeholder="Enter text"></textarea>
+
+  <script>
+    const peer = new Peer();  // Initialize PeerJS (cloud server)
+    
+    peer.on('open', id => {
+      console.log("Receiver ID: ", id);
+      // Generate QR code with the receiver's PeerJS ID
+      QRCode.toCanvas(document.getElementById('qrCode'), id, err => {
+        if (err) console.error(err);
+      });
+    });
+
+    peer.on('connection', conn => {
+      console.log("Connection established");
+      conn.on('data', data => {
+        if (data.text) {
+          document.getElementById('textArea').value = data.text;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

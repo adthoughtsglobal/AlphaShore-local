@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sender</title>
+  <script src="https://cdn.peerjs.com/0.3/peer.js"></script>
+  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+</head>
+<body>
+  <h2>Sender</h2>
+  <button id="startCamera">Start Camera</button>
+  <div id="camera" style="width: 300px; height: 300px;"></div>
+  <textarea id="textArea" placeholder="Enter text"></textarea>
+
+  <script>
+    const peer = new Peer();  // Initialize PeerJS (cloud server)
+    let conn;
+
+    // Start the camera and scan the QR code
+    document.getElementById('startCamera').addEventListener('click', () => {
+      const html5QrCode = new Html5Qrcode("camera");
+      html5QrCode.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 }, async (decodedText) => {
+        console.log("QR Code Decoded: ", decodedText);
+        // Connect to the receiver peer using the ID from the QR code
+        conn = peer.connect(decodedText);  // Use the decoded PeerJS ID
+
+        conn.on('open', () => {
+          console.log("Connection opened");
+        });
+
+        // Send data when text changes in the textarea
+        document.getElementById('textArea').addEventListener('input', () => {
+          if (conn.open) {
+            conn.send({ text: document.getElementById('textArea').value });
+          }
+        });
+
+        // Receive data
+        conn.on('data', (data) => {
+          if (data.text) {
+            document.getElementById('textArea').value = data.text;
+          }
+        });
+
+        // Stop the camera once the QR is scanned
+        await html5QrCode.stop();
+      });
+    });
+  </script>
+</body>
+</html>
