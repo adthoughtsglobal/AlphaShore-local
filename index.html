@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PeerJS Communication</title>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <style>
     body {
       display: flex;
@@ -47,6 +49,16 @@
     #senderUI textarea, #receiverUI textarea {
       height: 100px;
     }
+
+
+    #qrCode {
+      margin: 20px;
+    }
+    #qrScanner {
+      margin: 20px;
+      width: 300px;
+      height: 300px;
+    }
   </style>
 </head>
 <body>
@@ -60,7 +72,8 @@
   <!-- Sender UI -->
   <div id="senderUI" class="hidden">
     <h2>Sender</h2>
-    <label for="peerId">Enter Receiver's PeerJS ID:</label>
+    <div id="qrScanner"></div>
+    <label for="peerId">Enter Receiver's PeerJS ID (if QR scan fails):</label>
     <input type="text" id="peerId" placeholder="Receiver's ID">
     <button id="connectButton">Connect</button>
     <textarea id="textArea" placeholder="Enter text"></textarea>
@@ -71,6 +84,7 @@
     <h2>Receiver</h2>
     <p>Share this PeerJS ID with the sender:</p>
     <p id="receiverId"></p>
+    <div id="qrCode"></div>
     <textarea id="textAreaReceiver" placeholder="Enter text"></textarea>
   </div>
 </div>
@@ -86,6 +100,8 @@
   const textAreaSender = document.getElementById('textArea');
   const textAreaReceiver = document.getElementById('textAreaReceiver');
   const receiverIdDisplay = document.getElementById('receiverId');
+  const qrCodeElement = document.getElementById('qrCode');
+  const qrScannerElement = document.getElementById('qrScanner');
 
   let peer, conn;
 
@@ -100,6 +116,11 @@
         console.log('Sender Peer ID:', id);
       } else if (receiverUI.classList.contains('hidden') === false) {
         receiverIdDisplay.innerText = id; // Display receiver's Peer ID
+        new QRCode(qrCodeElement, {
+          text: id,
+          width: 128,
+          height: 128
+        });
       }
     });
 
@@ -120,6 +141,25 @@
     initialScreen.classList.add('hidden');
     senderUI.classList.remove('hidden');
     initializePeer();
+
+    // Start the QR code scanner
+    const html5QrCode = new Html5Qrcode("qrScanner");
+    html5QrCode.start(
+      { facingMode: "environment" }, 
+      {
+        fps: 10,    // Frame per second for scanning
+        qrbox: 250  // Size of the scanning box
+      },
+      (decodedText, decodedResult) => {
+        // When QR code is scanned, use the decoded peerId
+        console.log(`Scanned peer ID: ${decodedText}`);
+        peerIdInput.value = decodedText; // Fill in the peerId field
+        html5QrCode.stop(); // Stop the QR code scanner
+      },
+      (errorMessage) => {
+        console.log(`QR Code error: ${errorMessage}`);
+      }
+    );
   });
 
   // Show receiver UI
