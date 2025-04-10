@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +16,10 @@
       height: 100vh;
       margin: 0;
       font-family: Arial, sans-serif;
+      background-color: #161616;
+      color: white;
     }
+
     #container {
       display: flex;
       justify-content: center;
@@ -23,174 +27,309 @@
       flex-direction: column;
       text-align: center;
     }
+
     .hidden {
       display: none !important;
     }
+
     .btn {
       width: 150px;
       padding: 20px;
       margin: 10px;
       font-size: 18px;
       cursor: pointer;
-      border: 2px solid #000;
-      border-radius: 5px;
+      color: inherit;
+      background-color: rgb(35, 35, 35);
+      border: 1px solid #444444;
+      box-shadow: 0 3px 10px black;
+      padding: 1em 2em;
+      border-radius: 1em;
     }
-    #senderUI, #receiverUI {
+
+    #senderUI,
+    #receiverUI {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    #senderUI input, #senderUI textarea, #receiverUI textarea {
+
+    #senderUI input,
+    #senderUI textarea,
+    #receiverUI textarea {
       margin: 10px;
       padding: 10px;
       font-size: 16px;
       width: 300px;
     }
-    #senderUI textarea, #receiverUI textarea {
+
+    #senderUI textarea,
+    #receiverUI textarea {
       height: 100px;
     }
+
     #qrCode {
-      margin: 20px;
+
+      img, canvas {
+      background: white;
+      padding: 1em;
+      border-radius: 1em;
+      }
     }
+
     #qrScanner {
       margin: 20px;
       width: 300px;
       height: 300px;
     }
+
+    .nontextareaelems {
+      display: flex;
+      flex-direction: column;
+      background-color: rgb(35, 35, 35);
+      border: 1px solid #444444;
+      box-shadow: 0 3px 10px black;
+      padding: 2em;
+      border-radius: 1em;
+      align-items: center;
+    }
+
+    .loader {
+      position: relative;
+      width: 108px;
+      height: 100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .loader::after,
+    .loader::before {
+      content: '';
+      display: inline-block;
+      width: 48px;
+      height: 48px;
+      background-color: #FFF;
+      background-image: radial-gradient(circle 14px, #0d161b 100%, transparent 0);
+      background-repeat: no-repeat;
+      border-radius: 50%;
+      animation: eyeMove 10s infinite, blink 10s infinite;
+    }
+
+    @keyframes eyeMove {
+
+      0%,
+      10% {
+        background-position: 0px 0px
+      }
+
+      13%,
+      40% {
+        background-position: -15px 0px
+      }
+
+      43%,
+      70% {
+        background-position: 15px 0px
+      }
+
+      73%,
+      90% {
+        background-position: 0px 15px
+      }
+
+      93%,
+      100% {
+        background-position: 0px 0px
+      }
+    }
+
+    @keyframes blink {
+
+      0%,
+      10%,
+      12%,
+      20%,
+      22%,
+      40%,
+      42%,
+      60%,
+      62%,
+      70%,
+      72%,
+      90%,
+      92%,
+      98%,
+      100% {
+        height: 48px
+      }
+
+      11%,
+      21%,
+      41%,
+      61%,
+      71%,
+      91%,
+      99% {
+        height: 18px
+      }
+    }
   </style>
 </head>
+
 <body>
 
-<div id="container">
-  <div id="initialScreen">
-    <button class="btn" id="senderButton">Sender</button>
-    <button class="btn" id="receiverButton">Receiver</button>
+  <div id="container">
+    <div id="initialScreen">
+      <button class="btn" id="senderButton">Sender</button>
+      <button class="btn" id="receiverButton">Receiver</button>
+    </div>
+
+    <!-- Sender UI -->
+    <div id="senderUI" class="hidden">
+      <div class="nontextareaelems">
+
+        <h2>Sender</h2>
+        <div id="qrScanner"></div>
+        <label for="peerId">Enter Receiver's PeerJS ID (if QR scan fails):</label>
+        <input type="text" id="peerId" placeholder="Receiver's ID">
+        <button id="connectButton">Connect</button>
+      </div>
+      <textarea id="textArea" placeholder="Enter text"></textarea>
+    </div>
+
+    <!-- Receiver UI -->
+    <div id="receiverUI" class="hidden">
+      <div class="nontextareaelems">
+
+        <h2>Receiver</h2>
+        <p>Share this PeerJS ID with the sender:</p>
+        <p id="receiverId"></p>
+        <div id="qrCode"><span class="loader"></span></div>
+      </div>
+      <textarea id="textAreaReceiver" placeholder="Enter text"></textarea>
+    </div>
   </div>
 
-  <!-- Sender UI -->
-  <div id="senderUI" class="hidden">
-    <h2>Sender</h2>
-    <div id="qrScanner"></div>
-    <label for="peerId">Enter Receiver's PeerJS ID (if QR scan fails):</label>
-    <input type="text" id="peerId" placeholder="Receiver's ID">
-    <button id="connectButton">Connect</button>
-    <textarea id="textArea" placeholder="Enter text"></textarea>
-  </div>
+  <script>
+    const senderButton = document.getElementById('senderButton');
+    const receiverButton = document.getElementById('receiverButton');
+    const initialScreen = document.getElementById('initialScreen');
+    const senderUI = document.getElementById('senderUI');
+    const receiverUI = document.getElementById('receiverUI');
+    const peerIdInput = document.getElementById('peerId');
+    const connectButton = document.getElementById('connectButton');
+    const textAreaSender = document.getElementById('textArea');
+    const textAreaReceiver = document.getElementById('textAreaReceiver');
+    const receiverIdDisplay = document.getElementById('receiverId');
+    const qrCodeElement = document.getElementById('qrCode');
+    const qrScannerElement = document.getElementById('qrScanner');
 
-  <!-- Receiver UI -->
-  <div id="receiverUI" class="hidden">
-    <h2>Receiver</h2>
-    <p>Share this PeerJS ID with the sender:</p>
-    <p id="receiverId"></p>
-    <div id="qrCode"></div>
-    <textarea id="textAreaReceiver" placeholder="Enter text"></textarea>
-  </div>
-</div>
+    let peer, conn;
 
-<script>
-  const senderButton = document.getElementById('senderButton');
-  const receiverButton = document.getElementById('receiverButton');
-  const initialScreen = document.getElementById('initialScreen');
-  const senderUI = document.getElementById('senderUI');
-  const receiverUI = document.getElementById('receiverUI');
-  const peerIdInput = document.getElementById('peerId');
-  const connectButton = document.getElementById('connectButton');
-  const textAreaSender = document.getElementById('textArea');
-  const textAreaReceiver = document.getElementById('textAreaReceiver');
-  const receiverIdDisplay = document.getElementById('receiverId');
-  const qrCodeElement = document.getElementById('qrCode');
-  const qrScannerElement = document.getElementById('qrScanner');
-
-  let peer, conn;
-
-  // Initialize PeerJS
-  function initializePeer() {
-    peer = new Peer();
-
-    // Set up peer connection events
-    peer.on('open', id => {
-      console.log("Peer ID: ", id);
-      if (senderUI.classList.contains('hidden') === false) {
-        console.log('Sender Peer ID:', id);
-      } else if (receiverUI.classList.contains('hidden') === false) {
-        receiverIdDisplay.innerText = id; // Display receiver's Peer ID
-        new QRCode(qrCodeElement, {
-          text: id,
-          width: 128,
-          height: 128
-        });
-      }
-    });
-
-    // Handle incoming connections
-    peer.on('connection', connection => {
-      console.log('Connection established with sender');
-      conn = connection;
-      conn.on('data', data => {
-        if (data.text) {
-          // Update the shared textarea with received message
-          textAreaReceiver.value += '\n' + data.text;
-        }
-      });
-    });
-  }
-
-  // Show sender UI
-  senderButton.addEventListener('click', () => {
-    initialScreen.classList.add('hidden');
-    senderUI.classList.remove('hidden');
-    initializePeer();
-
-    // Start the QR code scanner
-    const html5QrCode = new Html5Qrcode("qrScanner");
-    html5QrCode.start(
-      { facingMode: "environment" }, 
-      {
-        fps: 10,    // Frame per second for scanning
-        qrbox: 250  // Size of the scanning box
-      },
-      (decodedText, decodedResult) => {
-        // When QR code is scanned, use the decoded peerId
-        console.log(`Scanned peer ID: ${decodedText}`);
-        peerIdInput.value = decodedText; // Fill in the peerId field
-        html5QrCode.stop(); // Stop the QR code scanner
-      },
-      (errorMessage) => {
-        console.log(`QR Code error: ${errorMessage}`);
-      }
-    );
-  });
-
-  // Show receiver UI
-  receiverButton.addEventListener('click', () => {
-    initialScreen.classList.add('hidden');
-    receiverUI.classList.remove('hidden');
-    initializePeer();
-  });
-
-  // Connect to the receiver from sender
-  connectButton.addEventListener('click', () => {
-    const receiverId = peerIdInput.value;
-    if (receiverId) {
-      conn = peer.connect(receiverId);
-      conn.on('open', () => {
-        console.log('Connection established with receiver');
-        textAreaSender.addEventListener('input', () => {
-          if (conn.open) {
-            conn.send({ text: textAreaSender.value });
-          }
-        });
+    function initializePeer(role) {
+      document.querySelectorAll('textarea').forEach(el => {
+        el.style.display = el.style.display === 'none' ? '' : 'none';
       });
 
-      conn.on('data', data => {
-        if (data.text) {
-          // Update the shared textarea with received message
-          textAreaSender.value += data.text;
+      peer = new Peer();
+
+      peer.on('open', id => {
+        if (role === 'receiver') {
+          receiverIdDisplay.innerText = id;
+          qrCodeElement.innerHTML = '';
+          new QRCode(qrCodeElement, {
+            text: id,
+            width: 128,
+            height: 128
+          });
         }
+      });
+
+      peer.on('connection', connection => {
+        conn = connection;
+        conn.on('open', () => {
+          let isRemoteUpdate = false;
+
+          textAreaReceiver.addEventListener('input', () => {
+            if (!isRemoteUpdate && conn.open) {
+              conn.send({ text: textAreaReceiver.value });
+            }
+          });
+
+          conn.on('data', data => {
+            if (data.text !== undefined) {
+              isRemoteUpdate = true;
+              textAreaReceiver.value = data.text;
+              isRemoteUpdate = false;
+            }
+            document.querySelectorAll('.nontextareaelems').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('textarea').forEach(el => {
+              el.style.display = el.style.display === 'none' ? '' : 'none';
+            });
+
+          });
+        });
       });
     }
-  });
-</script>
+
+
+    // Show sender UI
+    senderButton.addEventListener('click', () => {
+      initialScreen.classList.add('hidden');
+      senderUI.classList.remove('hidden');
+      initializePeer('sender');
+
+      const html5QrCode = new Html5Qrcode("qrScanner");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        (decodedText) => {
+          peerIdInput.value = decodedText;
+          html5QrCode.stop();
+        },
+        (errorMessage) => {
+          console.log(`QR Code error: ${errorMessage}`);
+        }
+      );
+    });
+
+    receiverButton.addEventListener('click', () => {
+      initialScreen.classList.add('hidden');
+      receiverUI.classList.remove('hidden');
+      initializePeer('receiver');
+    });
+
+    // Connect to the receiver from sender
+    connectButton.addEventListener('click', () => {
+      const receiverId = peerIdInput.value;
+      if (receiverId) {
+        conn = peer.connect(receiverId);
+        conn.on('open', () => {
+          console.log('Connection established with receiver');
+          textAreaSender.addEventListener('input', () => {
+            if (conn.open) {
+              conn.send({ text: textAreaSender.value });
+            }
+          });
+        });
+
+        conn.on('data', data => {
+          if (data.text) {
+            textAreaSender.value = data.text;
+          }
+          document.querySelectorAll('.nontextareaelems').forEach(el => el.style.display = 'none');
+          document.querySelectorAll('textarea').forEach(el => {
+            el.style.display = el.style.display === 'none' ? '' : 'none';
+          });
+
+        });
+      }
+    });
+  </script>
 
 </body>
+
 </html>
