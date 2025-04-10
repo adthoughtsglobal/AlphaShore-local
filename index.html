@@ -1,98 +1,114 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="UTF-8">
-  <title>P2P File & Text Share</title>
-  <script src="qrcode.js"></script>
-  <style>
-    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
-    section { border: 1px solid #ccc; padding: 16px; margin: 16px; width: 90%; max-width: 600px; }
-    textarea { width: 100%; height: 150px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>P2P File & Text Share</title>
+    <script src="qrcode.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        section {
+            border: 1px solid #ccc;
+            padding: 16px;
+            margin: 16px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>P2P File & Text Share</h1>
+    <h1>P2P File & Text Share</h1>
+    <section id="sender">
+        <h2>Sender</h2>
+        <button id="startCamera">Start Camera</button>
+        <div id="camera" style="width: 300px; height: 300px;"></div>
+        <button id="scanQR">Scan Receiver QR</button>
+    </section>
 
-<section id="sender">
-  <h2>Sender</h2>
-  <button id="startCamera">Start Camera</button>
-  <div id="camera" style="width: 300px; height: 300px;"></div>
-  <button id="scanQR">Scan Receiver QR</button>
-</section>
+    <section id="receiver">
+        <h2>Receiver</h2>
+        <button id="generateQR">Generate QR</button>
+        <div id="qrReceiver"></div>
+        <textarea id="textArea"></textarea>
+    </section>
+    <script defer>
+        let pc = new RTCPeerConnection();
+        let dataChannel;
+        let isSender = false;
+        let html5QrCode;
 
-<section id="receiver">
-  <h2>Receiver</h2>
-  <div id="qrReceiver"></div>
-  <textarea id="textArea"></textarea>
-</section>
+        document.getElementById('textArea').addEventListener('input', () => {
+            if (dataChannel && dataChannel.readyState === 'open') {
+                dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
+            }
+        });
 
-<script>
-let pc = new RTCPeerConnection();
-let dataChannel;
-let sharedText = '';
-let isSender = false;
-let html5QrCode;
-let remoteStreamSet = false;
+        pc.ondatachannel = e => {
+            dataChannel = e.channel;
+            dataChannel.onmessage = msg => {
+                let data = JSON.parse(msg.data);
+                if (data.text !== undefined) {
+                    document.getElementById('textArea').value = data.text;
+                }
+            };
+        };
 
-document.getElementById('textArea').addEventListener('input', () => {
-  if (dataChannel && dataChannel.readyState === 'open') {
-    dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
-  }
-});
+        pc.onicecandidate = e => {
+            if (e.candidate) return;
+            if (!isSender) {
+                QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
+            }
+        };
 
-pc.ondatachannel = e => {
-  dataChannel = e.channel;
-  dataChannel.onmessage = msg => {
-    let data = JSON.parse(msg.data);
-    if (data.text !== undefined) {
-      document.getElementById('textArea').value = data.text;
-    }
-  };
-};
+        document.getElementById('startCamera').onclick = async () => {
+            isSender = true;
+            html5QrCode = new Html5Qrcode("camera");
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                () => { }
+            );
+        };
 
-pc.onicecandidate = e => {
-  if (e.candidate) return;
-  if (!isSender) {
-    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
-  }
-};
+        document.getElementById('scanQR').onclick = () => {
+            html5QrCode.scanOnce().then(async result => {
+                let remoteDesc = new RTCSessionDescription(JSON.parse(result));
+                await pc.setRemoteDescription(remoteDesc);
+                dataChannel = pc.createDataChannel("text");
+                dataChannel.onopen = () => dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
+                dataChannel.onmessage = msg => {
+                    let data = JSON.parse(msg.data);
+                    if (data.text !== undefined) {
+                        document.getElementById('textArea').value = data.text;
+                    }
+                };
+                let answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
+            });
+        };
 
-document.getElementById('startCamera').onclick = async () => {
-  isSender = true;
-  html5QrCode = new Html5Qrcode("camera");
-  await html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    () => {}
-  );
-};
-
-document.getElementById('scanQR').onclick = () => {
-  html5QrCode.scanOnce().then(async result => {
-    let remoteDesc = new RTCSessionDescription(JSON.parse(result));
-    await pc.setRemoteDescription(remoteDesc);
-    dataChannel = pc.createDataChannel("text");
-    dataChannel.onopen = () => dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
-    dataChannel.onmessage = msg => {
-      let data = JSON.parse(msg.data);
-      if (data.text !== undefined) {
-        document.getElementById('textArea').value = data.text;
-      }
-    };
-    let answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
-  });
-};
-
-(async () => {
-  if (!isSender) {
-    let offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-  }
-})();
-</script>
+        document.getElementById('generateQR').onclick = async () => {
+            if (!pc.localDescription) {
+                let offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+            }
+        };
+    </script>
 
 </body>
+
 </html>
