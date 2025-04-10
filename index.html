@@ -49,8 +49,6 @@
     #senderUI textarea, #receiverUI textarea {
       height: 100px;
     }
-
-
     #qrCode {
       margin: 20px;
     }
@@ -130,7 +128,8 @@
       conn = connection;
       conn.on('data', data => {
         if (data.text) {
-          textAreaReceiver.value = data.text;
+          // Update the shared textarea with received message
+          textAreaReceiver.value += '\n' + data.text;
         }
       });
     });
@@ -185,7 +184,8 @@
 
       conn.on('data', data => {
         if (data.text) {
-          textAreaSender.value = data.text;
+          // Update the shared textarea with received message
+          textAreaSender.value += '\n' + data.text;
         }
       });
     }
