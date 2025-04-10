@@ -185,7 +185,7 @@
       conn.on('data', data => {
         if (data.text) {
           // Update the shared textarea with received message
-          textAreaSender.value += '\n' + data.text;
+          textAreaSender.value += data.text;
         }
       });
     }
