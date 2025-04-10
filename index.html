@@ -1,133 +1,156 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>P2P File & Text Share</title>
-    <script src="qrcode.js"></script>
-    <script src="https://cdn.peerjs.com/0.3/peer.js"></script>
-
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        section {
-            border: 1px solid #ccc;
-            padding: 16px;
-            margin: 16px;
-            width: 90%;
-            max-width: 600px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 150px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PeerJS Communication</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    #container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+    }
+    .hidden {
+      display: none;
+    }
+    .btn {
+      width: 150px;
+      padding: 20px;
+      margin: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      border: 2px solid #000;
+      border-radius: 5px;
+    }
+    #senderUI, #receiverUI {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #senderUI input, #senderUI textarea, #receiverUI textarea {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+    }
+    #senderUI textarea, #receiverUI textarea {
+      height: 100px;
+    }
+  </style>
 </head>
-
 <body>
 
-    <h1>P2P File & Text Share</h1>
+<div id="container">
+  <div id="initialScreen">
+    <button class="btn" id="senderButton">Sender</button>
+    <button class="btn" id="receiverButton">Receiver</button>
+  </div>
 
-    <section id="sender">
-      <h2>Sender</h2>
-      <button id="startCamera">Start Camera</button>
-      <div id="camera" style="width: 300px; height: 300px;"></div>
-      <button id="scanQR">Scan Receiver QR</button>
-    </section>
-    
-    <section id="receiver">
-      <h2>Receiver</h2>
-      <button id="generateQR">Generate QR</button>
-      <div id="qrReceiver"></div>
-      <textarea id="textArea"></textarea>
-    </section>
-    
-    <script defer>
-      let pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-      });
-      let dataChannel;
-      let isSender = false;
-      let html5QrCode;
-      let localOfferGenerated = false;
-    
-      document.getElementById('textArea').addEventListener('input', () => {
-        if (dataChannel && dataChannel.readyState === 'open') {
-          dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
-        }
-      });
-    
-      pc.ondatachannel = e => {
-        dataChannel = e.channel;
-        dataChannel.onmessage = msg => {
-          let data = JSON.parse(msg.data);
-          if (data.text !== undefined) {
-            document.getElementById('textArea').value = data.text;
-          }
-        };
-      };
-    
-      async function createOffer() {
-        let offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        localOfferGenerated = true;
+  <!-- Sender UI -->
+  <div id="senderUI" class="hidden">
+    <h2>Sender</h2>
+    <label for="peerId">Enter Receiver's PeerJS ID:</label>
+    <input type="text" id="peerId" placeholder="Receiver's ID">
+    <button id="connectButton">Connect</button>
+    <textarea id="textArea" placeholder="Enter text"></textarea>
+  </div>
+
+  <!-- Receiver UI -->
+  <div id="receiverUI" class="hidden">
+    <h2>Receiver</h2>
+    <p>Share this PeerJS ID with the sender:</p>
+    <p id="receiverId"></p>
+    <textarea id="textAreaReceiver" placeholder="Enter text"></textarea>
+  </div>
+</div>
+
+<script>
+  const senderButton = document.getElementById('senderButton');
+  const receiverButton = document.getElementById('receiverButton');
+  const initialScreen = document.getElementById('initialScreen');
+  const senderUI = document.getElementById('senderUI');
+  const receiverUI = document.getElementById('receiverUI');
+  const peerIdInput = document.getElementById('peerId');
+  const connectButton = document.getElementById('connectButton');
+  const textAreaSender = document.getElementById('textArea');
+  const textAreaReceiver = document.getElementById('textAreaReceiver');
+  const receiverIdDisplay = document.getElementById('receiverId');
+
+  let peer, conn;
+
+  // Initialize PeerJS
+  function initializePeer() {
+    peer = new Peer();
+
+    // Set up peer connection events
+    peer.on('open', id => {
+      console.log("Peer ID: ", id);
+      if (senderUI.classList.contains('hidden') === false) {
+        console.log('Sender Peer ID:', id);
+      } else if (receiverUI.classList.contains('hidden') === false) {
+        receiverIdDisplay.innerText = id; // Display receiver's Peer ID
       }
-    
-      pc.onicecandidate = e => {
-        if (e.candidate === null && !localOfferGenerated) return; 
-        if (e.candidate === null) {
-          console.log("No more ICE candidates. Ready to generate QR.");
-          QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription))
-            .catch(err => console.error("QRCode generation error:", err));
+    });
+
+    // Handle incoming connections
+    peer.on('connection', connection => {
+      console.log('Connection established with sender');
+      conn = connection;
+      conn.on('data', data => {
+        if (data.text) {
+          textAreaReceiver.value = data.text;
         }
-      };
-    
-      pc.onicegatheringstatechange = () => {
-        if (pc.iceGatheringState === 'complete' && !localOfferGenerated) {
-          console.log("ICE gathering complete, generating QR...");
-          QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription))
-            .catch(err => console.error("QRCode generation error:", err));
-        }
-      };
-    
-      document.getElementById('generateQR').onclick = async () => {
-        isSender = false;
-        await createOffer();
-      };
-    
-      document.getElementById('scanQR').onclick = () => {
-        if (!html5QrCode) {
-          html5QrCode = new Html5Qrcode("camera");
-        }
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          async (decodedText) => {
-            await html5QrCode.stop();
-            let remoteDesc = new RTCSessionDescription(JSON.parse(decodedText));
-            await pc.setRemoteDescription(remoteDesc);
-            dataChannel = pc.createDataChannel("text");
-            dataChannel.onopen = () => {
-              dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
-            };
-            dataChannel.onmessage = msg => {
-              let data = JSON.parse(msg.data);
-              if (data.text !== undefined) {
-                document.getElementById('textArea').value = data.text;
-              }
-            };
-            let answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
+      });
+    });
+  }
+
+  // Show sender UI
+  senderButton.addEventListener('click', () => {
+    initialScreen.classList.add('hidden');
+    senderUI.classList.remove('hidden');
+    initializePeer();
+  });
+
+  // Show receiver UI
+  receiverButton.addEventListener('click', () => {
+    initialScreen.classList.add('hidden');
+    receiverUI.classList.remove('hidden');
+    initializePeer();
+  });
+
+  // Connect to the receiver from sender
+  connectButton.addEventListener('click', () => {
+    const receiverId = peerIdInput.value;
+    if (receiverId) {
+      conn = peer.connect(receiverId);
+      conn.on('open', () => {
+        console.log('Connection established with receiver');
+        textAreaSender.addEventListener('input', () => {
+          if (conn.open) {
+            conn.send({ text: textAreaSender.value });
           }
-        );
-      };
-    </script>
-    
-    </body>
-    </html>
+        });
+      });
+
+      conn.on('data', data => {
+        if (data.text) {
+          textAreaSender.value = data.text;
+        }
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
