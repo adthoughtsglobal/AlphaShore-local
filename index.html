@@ -32,111 +32,100 @@
 
     <h1>P2P File & Text Share</h1>
 
-<section id="sender">
-  <h2>Sender</h2>
-  <button id="startCamera">Start Camera</button>
-  <div id="camera" style="width: 300px; height: 300px;"></div>
-  <button id="scanQR">Scan Receiver QR</button>
-</section>
-
-<section id="receiver">
-  <h2>Receiver</h2>
-  <button id="generateQR">Generate QR</button>
-  <div id="qrReceiver"></div>
-  <textarea id="textArea"></textarea>
-</section>
-
-<script defer>
-let pc = new RTCPeerConnection({
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-});
-let dataChannel;
-let isSender = false;
-let html5QrCode;
-
-document.getElementById('textArea').addEventListener('input', () => {
-  if (dataChannel && dataChannel.readyState === 'open') {
-    dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
-  }
-});
-
-pc.ondatachannel = e => {
-  dataChannel = e.channel;
-  dataChannel.onmessage = msg => {
-    let data = JSON.parse(msg.data);
-    if (data.text !== undefined) {
-      document.getElementById('textArea').value = data.text;
-    }
-  };
-};
-pc.onicecandidate = e => {
-  if (e.candidate) {
-    console.log("New ICE Candidate:", e.candidate);
-  } else {
-    // No more candidates left, waiting for gathering to complete
-    console.log("All ICE candidates gathered.");
-  }
-};
-
-pc.onicegatheringstatechange = () => {
-  if (pc.iceGatheringState === 'complete' && !isSender) {
-    console.log("ICE gathering completed, generating QR...");
-    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription))
-      .catch(err => console.error("QRCode generation error:", err));
-  }
-};
-
-
-document.getElementById('startCamera').onclick = async () => {
-  isSender = true;
-  html5QrCode = new Html5Qrcode("camera");
-  await html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    async (decodedText) => {
-      await html5QrCode.stop();
-      let remoteDesc = new RTCSessionDescription(JSON.parse(decodedText));
-      await pc.setRemoteDescription(remoteDesc);
-      dataChannel = pc.createDataChannel("text");
-      dataChannel.onopen = () => {
-        dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
+    <section id="sender">
+      <h2>Sender</h2>
+      <button id="startCamera">Start Camera</button>
+      <div id="camera" style="width: 300px; height: 300px;"></div>
+      <button id="scanQR">Scan Receiver QR</button>
+    </section>
+    
+    <section id="receiver">
+      <h2>Receiver</h2>
+      <button id="generateQR">Generate QR</button>
+      <div id="qrReceiver"></div>
+      <textarea id="textArea"></textarea>
+    </section>
+    
+    <script defer>
+      let pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      });
+      let dataChannel;
+      let isSender = false;
+      let html5QrCode;
+      let localOfferGenerated = false;
+    
+      document.getElementById('textArea').addEventListener('input', () => {
+        if (dataChannel && dataChannel.readyState === 'open') {
+          dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
+        }
+      });
+    
+      pc.ondatachannel = e => {
+        dataChannel = e.channel;
+        dataChannel.onmessage = msg => {
+          let data = JSON.parse(msg.data);
+          if (data.text !== undefined) {
+            document.getElementById('textArea').value = data.text;
+          }
+        };
       };
-      dataChannel.onmessage = msg => {
-        let data = JSON.parse(msg.data);
-        if (data.text !== undefined) {
-          document.getElementById('textArea').value = data.text;
+    
+      async function createOffer() {
+        let offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        localOfferGenerated = true;
+      }
+    
+      pc.onicecandidate = e => {
+        if (e.candidate === null && !localOfferGenerated) return; 
+        if (e.candidate === null) {
+          console.log("No more ICE candidates. Ready to generate QR.");
+          QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription))
+            .catch(err => console.error("QRCode generation error:", err));
         }
       };
-      let answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      await waitForIceComplete();
-      QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
-    }
-  );
-};
-
-document.getElementById('scanQR').onclick = () => {
-  if (!html5QrCode) {
-    html5QrCode = new Html5Qrcode("camera");
-  }
-};
-document.getElementById('generateQR').onclick = async () => {
-  try {
-    isSender = false;
-    let offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    console.log("Generated Offer:", pc.localDescription);
-  } catch (e) {
-    console.error("QR Generation Failed:", e);
-  }
-};
-
-
-function waitForIceComplete() {
-  // No blocking or waiting
-}
-
-</script>
-
-</body>
-</html>
+    
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === 'complete' && !localOfferGenerated) {
+          console.log("ICE gathering complete, generating QR...");
+          QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription))
+            .catch(err => console.error("QRCode generation error:", err));
+        }
+      };
+    
+      document.getElementById('generateQR').onclick = async () => {
+        isSender = false;
+        await createOffer();
+      };
+    
+      document.getElementById('scanQR').onclick = () => {
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("camera");
+        }
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          async (decodedText) => {
+            await html5QrCode.stop();
+            let remoteDesc = new RTCSessionDescription(JSON.parse(decodedText));
+            await pc.setRemoteDescription(remoteDesc);
+            dataChannel = pc.createDataChannel("text");
+            dataChannel.onopen = () => {
+              dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
+            };
+            dataChannel.onmessage = msg => {
+              let data = JSON.parse(msg.data);
+              if (data.text !== undefined) {
+                document.getElementById('textArea').value = data.text;
+              }
+            };
+            let answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+          }
+        );
+      };
+    </script>
+    
+    </body>
+    </html>
