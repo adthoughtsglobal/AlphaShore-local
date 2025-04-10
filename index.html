@@ -115,13 +115,18 @@ document.getElementById('scanQR').onclick = () => {
 };
 
 document.getElementById('generateQR').onclick = async () => {
-  if (pc.signalingState === 'stable') {
+  try {
+    isSender = false;
     let offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     await waitForIceComplete();
+    console.log("Generated Offer:", pc.localDescription);
     QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
+  } catch (e) {
+    console.error("QR Generation Failed:", e);
   }
 };
+
 
 function waitForIceComplete() {
   return new Promise(resolve => {
