@@ -31,84 +31,111 @@
 <body>
 
     <h1>P2P File & Text Share</h1>
-    <section id="sender">
-        <h2>Sender</h2>
-        <button id="startCamera">Start Camera</button>
-        <div id="camera" style="width: 300px; height: 300px;"></div>
-        <button id="scanQR">Scan Receiver QR</button>
-    </section>
 
-    <section id="receiver">
-        <h2>Receiver</h2>
-        <button id="generateQR">Generate QR</button>
-        <div id="qrReceiver"></div>
-        <textarea id="textArea"></textarea>
-    </section>
-    <script defer>
-        let pc = new RTCPeerConnection();
-        let dataChannel;
-        let isSender = false;
-        let html5QrCode;
+<section id="sender">
+  <h2>Sender</h2>
+  <button id="startCamera">Start Camera</button>
+  <div id="camera" style="width: 300px; height: 300px;"></div>
+  <button id="scanQR">Scan Receiver QR</button>
+</section>
 
-        document.getElementById('textArea').addEventListener('input', () => {
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
-            }
-        });
+<section id="receiver">
+  <h2>Receiver</h2>
+  <button id="generateQR">Generate QR</button>
+  <div id="qrReceiver"></div>
+  <textarea id="textArea"></textarea>
+</section>
 
-        pc.ondatachannel = e => {
-            dataChannel = e.channel;
-            dataChannel.onmessage = msg => {
-                let data = JSON.parse(msg.data);
-                if (data.text !== undefined) {
-                    document.getElementById('textArea').value = data.text;
-                }
-            };
-        };
+<script defer>
+let pc = new RTCPeerConnection({
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+});
+let dataChannel;
+let isSender = false;
+let html5QrCode;
 
-        pc.onicecandidate = e => {
-            if (e.candidate) return;
-            if (!isSender) {
-                QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
-            }
-        };
+document.getElementById('textArea').addEventListener('input', () => {
+  if (dataChannel && dataChannel.readyState === 'open') {
+    dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
+  }
+});
 
-        document.getElementById('startCamera').onclick = async () => {
-            isSender = true;
-            html5QrCode = new Html5Qrcode("camera");
-            await html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: 250 },
-                () => { }
-            );
-        };
+pc.ondatachannel = e => {
+  dataChannel = e.channel;
+  dataChannel.onmessage = msg => {
+    let data = JSON.parse(msg.data);
+    if (data.text !== undefined) {
+      document.getElementById('textArea').value = data.text;
+    }
+  };
+};
 
-        document.getElementById('scanQR').onclick = () => {
-            html5QrCode.scanOnce().then(async result => {
-                let remoteDesc = new RTCSessionDescription(JSON.parse(result));
-                await pc.setRemoteDescription(remoteDesc);
-                dataChannel = pc.createDataChannel("text");
-                dataChannel.onopen = () => dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
-                dataChannel.onmessage = msg => {
-                    let data = JSON.parse(msg.data);
-                    if (data.text !== undefined) {
-                        document.getElementById('textArea').value = data.text;
-                    }
-                };
-                let answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
-            });
-        };
+pc.onicecandidate = e => {
+  if (e.candidate) return;
+};
 
-        document.getElementById('generateQR').onclick = async () => {
-            if (!pc.localDescription) {
-                let offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-            }
-        };
-    </script>
+pc.onicegatheringstatechange = () => {
+  if (pc.iceGatheringState === 'complete' && !isSender) {
+    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
+  }
+};
+
+document.getElementById('startCamera').onclick = async () => {
+  isSender = true;
+  html5QrCode = new Html5Qrcode("camera");
+  await html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    async (decodedText) => {
+      await html5QrCode.stop();
+      let remoteDesc = new RTCSessionDescription(JSON.parse(decodedText));
+      await pc.setRemoteDescription(remoteDesc);
+      dataChannel = pc.createDataChannel("text");
+      dataChannel.onopen = () => {
+        dataChannel.send(JSON.stringify({ text: document.getElementById('textArea').value }));
+      };
+      dataChannel.onmessage = msg => {
+        let data = JSON.parse(msg.data);
+        if (data.text !== undefined) {
+          document.getElementById('textArea').value = data.text;
+        }
+      };
+      let answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await waitForIceComplete();
+      QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
+    }
+  );
+};
+
+document.getElementById('scanQR').onclick = () => {
+  if (!html5QrCode) {
+    html5QrCode = new Html5Qrcode("camera");
+  }
+};
+
+document.getElementById('generateQR').onclick = async () => {
+  if (pc.signalingState === 'stable') {
+    let offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitForIceComplete();
+    QRCode.toCanvas(document.getElementById('qrReceiver'), JSON.stringify(pc.localDescription));
+  }
+};
+
+function waitForIceComplete() {
+  return new Promise(resolve => {
+    if (pc.iceGatheringState === 'complete') return resolve();
+    const check = () => {
+      if (pc.iceGatheringState === 'complete') {
+        pc.removeEventListener('icegatheringstatechange', check);
+        resolve();
+      }
+    };
+    pc.addEventListener('icegatheringstatechange', check);
+  });
+}
+</script>
 
 </body>
-
 </html>
