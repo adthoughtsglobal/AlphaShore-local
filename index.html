@@ -227,10 +227,6 @@
     let peer, conn;
 
     function initializePeer(role) {
-      document.querySelectorAll('textarea').forEach(el => {
-        el.style.display = el.style.display === 'none' ? '' : 'none';
-      });
-
       peer = new Peer();
 
       peer.on('open', id => {
@@ -262,11 +258,6 @@
               textAreaReceiver.value = data.text;
               isRemoteUpdate = false;
             }
-            document.querySelectorAll('.nontextareaelems').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('textarea').forEach(el => {
-              el.style.display = el.style.display === 'none' ? '' : 'none';
-            });
-
           });
         });
       });
@@ -320,11 +311,6 @@
           if (data.text) {
             textAreaSender.value = data.text;
           }
-          document.querySelectorAll('.nontextareaelems').forEach(el => el.style.display = 'none');
-          document.querySelectorAll('textarea').forEach(el => {
-            el.style.display = el.style.display === 'none' ? '' : 'none';
-          });
-
         });
       }
     });
