@@ -191,3 +191,17 @@ button {
 .msg[role="sys"] {
     align-self: baseline;
 }
+
+#qrCode img, #qrCode canvas {
+    background: white;
+    padding: 1em;
+    border-radius: 1em;
+}
+
+#qrScanner {
+    margin: 20px;
+    width: 300px;
+    height: fit-content;
+    overflow: hidden;
+    border-radius: 1em;
+}
