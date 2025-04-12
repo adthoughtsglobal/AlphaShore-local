@@ -181,4 +181,4 @@ function endsession() {
 
 }
 
-showScr("auth")
+showScr("painting")
