@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>telephone game</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <div class="main">
+        <div id="painting">
+            <div class="progressBar">
+                <div class="ActProg"></div>
+            </div>
+            <h1>Draw a <span id="drawWhat">table</span></h1>
+            <canvas id="drawcanvas"></canvas>
+            <div class="colorpicker">
+                <div class="color" style="background-color: rgb(255, 137, 137);"></div>
+                <div class="color" style="background-color: rgb(255, 239, 137);"></div>
+                <div class="color" style="background-color: rgb(163, 255, 137);"></div>
+                <div class="color" style="background-color: rgb(137, 186, 255);"></div>
+                <div class="color" style="background-color: rgb(174, 137, 255);"></div>
+                <div class="color" style="background-color: rgb(43, 43, 43);"></div>
+                <div class="color" style="background-color: rgb(255, 255, 255);"></div>
+            </div>
+        </div>
+        <div id="review">
+            <div class="progressBar">
+                <div class="ActProg"></div>
+            </div>
+            <h1>What do you think this is?</h1>
+            <canvas id="guesscanvas"></canvas>
+        </div>
+    </div>
+    <script src="script.js" async defer></script>
+</body>
+
+</html>

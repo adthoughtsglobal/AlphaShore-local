@@ -1,0 +1,86 @@
+html {
+    height: 100%;
+}
+
+body {
+    color: #323232;
+    background-color: #f9dae2;
+    margin: 0;
+    height: 100%;
+    font-family: "Nunito", sans-serif;
+}
+
+.main {
+    display: flex
+;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+canvas {
+    border: 5px solid #b78272;
+    touch-action: none;
+    background-color: white;
+    aspect-ratio: 1/1;
+    border-radius: 2em;
+    width: 100%;
+}
+
+.colorpicker {
+    display: flex;
+    margin: 10px;
+    gap: 3px;
+    height: 40px;
+    align-items: center;
+    margin-top: 2em;
+}
+
+.color {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    border: 5px solid transparent;
+    border-radius: 3em;
+    transition: .2s ease-in;
+}
+
+.color.active {
+    border-color: #b78272;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+}
+
+div#painting {
+    display: flex
+;
+    flex-direction: column;
+    align-items: center;
+}
+
+#drawWhat {
+    font-weight: bolder;
+}
+
+.progressBar {
+    width: 40vw;
+    background: #ffffff;
+    height: 1.5em;
+    border-radius: 2em;
+    overflow: hidden;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.ActProg {
+    width: 80%;
+    background: #7e92bb;
+    height: 100%;
+    border-radius: 1em;
+}
+
+#review {
+    display: none;
+}
