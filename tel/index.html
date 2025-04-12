@@ -13,8 +13,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -22,11 +23,35 @@
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
     <div class="main">
-        <div id="painting">
-            <div class="progressBar">
-                <div class="ActProg"></div>
+        <div id="auth" class="window">
+            <h1>Let's setup!</h1>
+            <p>What will you do?</p>
+            <button class="btn" id="receiverButton">Make QR</button>
+            <button class="btn" id="senderButton">Scan QR</button>
+        </div>
+        <div id="scanUI" class="window">
+            <h2>Scan</h2>
+            <div id="qrScanner"></div>
+            <div class="inputsection">
+                <input placeholder="Receiver's ID (if QR fails)" id="peerId">
+                <button id="connectButton">Connect</button>
             </div>
-            <h1>Draw a <span id="drawWhat">table</span></h1>
+        </div>
+        <div id="qrUI" class="window">
+            <h2>Receiver</h2>
+            <p>Share this ID with the sender:</p>
+            <kbd id="receiverId"></kbd>
+            <div id="qrCode"><span class="loader"></span></div>
+        </div>
+        <div id="whowill" class="window">
+            <h1>Who is drawing?</h1>
+            <button>Me!</button>
+        </div>
+        <div id="painting" class="window">
+            <div class="progressBar">
+                <div class="ActProg" id="drawprogressindraw"></div>
+            </div>
+            <h1>Draw <span id="drawWhat">a table</span></h1>
             <canvas id="drawcanvas"></canvas>
             <div class="colorpicker">
                 <div class="color" style="background-color: rgb(255, 137, 137);"></div>
@@ -38,15 +63,55 @@
                 <div class="color" style="background-color: rgb(255, 255, 255);"></div>
             </div>
         </div>
-        <div id="review">
+        <div id="review" class="window">
             <div class="progressBar">
                 <div class="ActProg"></div>
             </div>
-            <h1>What do you think this is?</h1>
+            <h1>What is it?</h1>
             <canvas id="guesscanvas"></canvas>
+            <div class="inputsection">
+                <input placeholder="It is..." id="itisinput">
+                <button>Guess</button>
+            </div>
+        </div>
+
+        <div id="waitdr" class="window">
+            <div class="progressBar">
+                <div class="ActProg"></div>
+            </div>
+            <div class="loader"></div>
+            <h1>They're drawing...</h1>
+            <small>Get ready to guess</small>
+        </div>
+
+        <div id="waitgu" class="window">
+            <div class="progressBar">
+                <div class="ActProg"></div>
+            </div>
+            <div class="loader"></div>
+            <h1>They're wondering what you just drew...</h1>
+            <small>How did your drawing go?</small>
+        </div>
+        <div id="ending" class="window">
+            <div class="msg" role="sys">
+                <div class="rlmsg">
+                    Draw a car
+                </div>
+            </div>
+            <div class="msg" role="p1">
+                <div class="rlmsg">
+                    <img
+                        src="https://i0.wp.com/mossandfog.com/wp-content/uploads/2023/12/dbf18af0f8f7751016d48676a311ba13ebcff184-1.jpg">
+                </div>
+            </div>
+            <div class="msg" role="p2">
+                <div class="rlmsg">
+                    Its a tailoring machine.
+                </div>
+            </div>
         </div>
     </div>
-    <script src="script.js" async defer></script>
+    <script src="script.js" async></script>
 </body>
 
 </html>

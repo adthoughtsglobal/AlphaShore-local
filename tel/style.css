@@ -11,20 +11,21 @@ body {
 }
 
 .main {
-    display: flex
-;
+    display: flex;
     align-items: center;
     justify-content: center;
     height: 100%;
 }
 
 canvas {
-    border: 5px solid #b78272;
+    width: 90vw;
+    max-width: 400px;
+    aspect-ratio: 1 / 1;
     touch-action: none;
-    background-color: white;
-    aspect-ratio: 1/1;
     border-radius: 2em;
-    width: 100%;
+    background-color: white;
+    border: 5px solid #b78272;
+    display: block;
 }
 
 .colorpicker {
@@ -52,11 +53,11 @@ canvas {
     height: 40px;
 }
 
-div#painting {
-    display: flex
-;
+.window {
+    display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 
 #drawWhat {
@@ -75,12 +76,118 @@ div#painting {
 }
 
 .ActProg {
-    width: 80%;
+    width: 0%;
     background: #7e92bb;
     height: 100%;
     border-radius: 1em;
+    min-width: 25px;
 }
 
-#review {
-    display: none;
+h1 {
+    max-width: 70%;
+    text-align: center;
+}
+
+.inputsection {
+    border: 5px solid #b78272;
+    background-color: #ffffff;
+    margin-top: 1em;
+    border-radius: 2em;
+    display: flex;
+    width: 80%;
+    gap: .5em;
+}
+
+input {
+    padding: .5em 1em;
+    font-size: 1.2em;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    border: 0;
+    outline: none;
+    min-width: 0;
+}
+
+button {
+    background-color: #b4be89;
+    border: 0;
+    margin: .3em;
+    border-radius: 2em;
+    padding: .4em 1em;
+    font-size: 2em;
+    color: #415533;
+    cursor: pointer;
+    font-weight: bolder;
+    font-family: inherit;
+}
+
+.inputsection button {
+    font-size: 1.2em;
+}
+
+.loader {
+    margin-top: 2em;
+    width: 60px;
+    aspect-ratio: .5;
+    display: grid;
+    animation: l10-1 3s linear infinite;
+    transform-origin: 50% calc(100%/sqrt(3));
+}
+
+.loader:before {
+    content: "";
+    width: 30%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    margin: auto auto 0;
+    background: #CF4647;
+    animation: l10-0 .5s cubic-bezier(0, 800, 1, 800) infinite;
+}
+
+.loader:after {
+    content: "";
+    width: 100%;
+    aspect-ratio: 1/cos(30deg);
+    margin: 0 auto auto;
+    clip-path: polygon(50% -50%, 100% 50%, 50% 150%, 0 50%);
+    background: #524656;
+    animation: inherit;
+    animation-direction: reverse;
+}
+
+@keyframes l10-0 {
+
+    0%,
+    2% {
+        translate: 0 0%
+    }
+
+    98%,
+    to {
+        translate: 0 -.2%
+    }
+}
+
+@keyframes l10-1 {
+    to {
+        rotate: 1turn
+    }
+}
+
+.rlmsg {
+    padding: .5em 1em;
+    background: #ffffff;
+    border-radius: 0 2em 2em 2em;
+    box-shadow: 0 0 8px #2034543d inset, 0 2px 0 #00000036, 0 4px 10px #00000030;
+}
+
+.rlmsg img {
+    width: 250px;
+    border-radius: 1em;
+    margin: .3em 0;
+}
+
+.msg[role="sys"] {
+    align-self: baseline;
 }
