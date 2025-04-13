@@ -69,13 +69,13 @@ senderButton.addEventListener('click', () => {
 connectButton.addEventListener('click', () => {
     const receiverId = peerIdInput.value;
 
-    if (html5QrCode) {
-        html5QrCode.stop().catch(err => console.warn('Failed to stop QR scanner:', err));
-    }
 
     if (receiverId) {
         conn = peer.connect(receiverId);
         conn.on('open', () => {
+            if (html5QrCode) {
+                html5QrCode.stop().catch(err => console.warn('Failed to stop QR scanner:', err));
+            }
             console.log('Connection established with receiver');
             showScr("whowill");
         });
