@@ -140,7 +140,7 @@ function DoDraw() {
     var article = /^[aeiou]/i.test(word) ? 'an' : 'a';
     document.getElementById("drawWhat").innerText = article + ' ' + word;
     document.getElementById("systemprompt").innerText = article + ' ' + word;
-    
+
     conn.send({ state: "system_prompt", text: (article + ' ' + word) });
     startTimer(letthemguess)
     showScr("painting");
@@ -229,6 +229,9 @@ function handlemsg(msg) {
             document.getElementById("systemprompt").innerText = msg.text;
             break;
         case "restart":
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawing = false;
+            points = [];
             showScr("whowill");
     }
 }
