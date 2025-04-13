@@ -17,7 +17,7 @@ body {
     height: 100%;
 }
 
-canvas {
+canvas, #guesscanvas {
     width: 90vw;
     max-width: 400px;
     aspect-ratio: 1 / 1;
