@@ -10,6 +10,7 @@ const textAreaReceiver = document.getElementById('textAreaReceiver');
 const receiverIdDisplay = document.getElementById('receiverId');
 const qrCodeElement = document.getElementById('qrCode');
 const qrScannerElement = document.getElementById('qrScanner');
+var gametype = "none";
 
 let peer, conn;
 

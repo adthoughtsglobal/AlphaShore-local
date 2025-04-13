@@ -1,6 +1,7 @@
 const canvas = document.getElementById('drawcanvas');
 const ctx = canvas.getContext('2d');
 const colorEls = document.querySelectorAll('.color');
+var gameType = "none";
 
 let drawing = false;
 let currentColor = 'rgb(43, 43, 43)';
@@ -138,7 +139,7 @@ function DoDraw() {
     var word = genRandWord();
     var article = /^[aeiou]/i.test(word) ? 'an' : 'a';
     document.getElementById("drawWhat").innerText = article + ' ' + word;
-    
+
     startTimer(letthemguess)
     showScr("painting");
 }
@@ -168,6 +169,16 @@ function startTimer(callback, duration = 20) {
 }
 
 function letthemguess() {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.putImageData(imageData, 0, 0);
+
+    const dataUri = canvas.toDataURL('image/png');
+
+    conn.send({ state: "drawing_complete", src: dataUri });
     showScr("waitgu");
     startTimer(endsession);
 }
@@ -182,3 +193,22 @@ function endsession() {
 }
 
 showScr("auth")
+
+function imdrawing() {
+    console.log("I WILL DRAW");
+    gameType = "dr";
+    conn.send({ state: "declare_drawing" });
+    DoDraw();
+}
+
+function handlemsg(msg) {
+    switch (msg.state) {
+        case "declare_drawing":
+            gameType = "gu";
+            console.log("I WILL GUESS");
+            DoGuess();
+            break;
+        case "drawing_complete":
+            document.getElementById("guesscanvas").src = msg.src;
+    }
+}

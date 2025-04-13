@@ -31,22 +31,25 @@ function initializePeer(role) {
         conn = connection;
         conn.on('open', () => {
             let isRemoteUpdate = false;
-            
+            showScr("whowill");
+
             conn.on('data', data => {
-                if (data.text !== undefined) {
+                if (data !== undefined) {
                     isRemoteUpdate = true;
+                    handlemsg(data);
                     isRemoteUpdate = false;
                 }
             });
         });
     });
 }
+let html5QrCode;
 
 senderButton.addEventListener('click', () => {
     showScr("scanUI");
     initializePeer('sender');
 
-    const html5QrCode = new Html5Qrcode("qrScanner");
+    html5QrCode = new Html5Qrcode("qrScanner");
     html5QrCode.start(
         { facingMode: "environment" },
         {
@@ -61,27 +64,32 @@ senderButton.addEventListener('click', () => {
             console.log(`QR Code error: ${errorMessage}`);
         }
     );
-
-});
-
-receiverButton.addEventListener('click', () => {
-    showScr("qrUI");
-    initializePeer('receiver');
 });
 
 connectButton.addEventListener('click', () => {
     const receiverId = peerIdInput.value;
+
+    if (html5QrCode) {
+        html5QrCode.stop().catch(err => console.warn('Failed to stop QR scanner:', err));
+    }
+
     if (receiverId) {
         conn = peer.connect(receiverId);
         conn.on('open', () => {
             console.log('Connection established with receiver');
-            // code
+            showScr("whowill");
         });
 
         conn.on('data', data => {
-            if (data.text) {
-                // code
+            if (data) {
+                handlemsg(data)
             }
         });
     }
+});
+
+
+receiverButton.addEventListener('click', () => {
+    showScr("qrUI");
+    initializePeer('receiver');
 });

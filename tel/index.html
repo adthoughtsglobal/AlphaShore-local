@@ -33,6 +33,7 @@
         </div>
         <div id="scanUI" class="window">
             <h2>Scan</h2>
+            <p>Point at the QR Code.</p>
             <div id="qrScanner"></div>
             <div class="inputsection">
                 <input placeholder="Receiver's ID (if QR fails)" id="peerId">
@@ -48,7 +49,7 @@
         </div>
         <div id="whowill" class="window">
             <h1>Who is drawing?</h1>
-            <button>Me!</button>
+            <button onclick="imdrawing()">Me!</button>
         </div>
         <div id="painting" class="window">
             <div class="progressBar">
@@ -71,7 +72,7 @@
                 <div class="ActProg"></div>
             </div>
             <h1>What is it?</h1>
-            <canvas id="guesscanvas"></canvas>
+            <img id="guesscanvas" src="https://picsum.photos/300/200">
             <div class="inputsection">
                 <input placeholder="It is..." id="itisinput">
                 <button>Guess</button>

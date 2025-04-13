@@ -96,6 +96,7 @@ h1 {
     display: flex;
     width: 80%;
     gap: .5em;
+    max-width: 500px;
 }
 
 input {
@@ -107,6 +108,7 @@ input {
     border: 0;
     outline: none;
     min-width: 0;
+    flex: 1;
 }
 
 button {
@@ -196,6 +198,7 @@ button {
     background: white;
     padding: 1em;
     border-radius: 1em;
+    margin-top: 1em;
 }
 
 #qrScanner {
