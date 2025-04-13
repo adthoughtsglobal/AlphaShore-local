@@ -71,11 +71,11 @@
             <div class="progressBar">
                 <div class="ActProg"></div>
             </div>
-            <h1>What is it?</h1>
+            <h1 id="whatsit">What is it?</h1>
             <img id="guesscanvas" src="https://picsum.photos/300/200">
             <div class="inputsection">
                 <input placeholder="It is..." id="itisinput">
-                <button>Guess</button>
+                <button onclick="document.getElementById('whatsit').value = 'Are you really sure';">Guess</button>
             </div>
         </div>
 
@@ -107,7 +107,7 @@
             <div class="msg" role="p2">
                     Its a <span id="whattheyguessed">watermelon</span>
             </div>
-            <button>Let's go again!</button>
+            <button style="margin-top: 10px;">Let's go again!</button>
         </div>
     </div>
     <script src="script.js" async></script>

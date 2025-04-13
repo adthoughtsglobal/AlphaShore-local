@@ -57,7 +57,7 @@ canvas, #guesscanvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
+    width: 90%;
     max-width: 500px;
 }
 

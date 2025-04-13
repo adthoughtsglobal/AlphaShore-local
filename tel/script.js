@@ -228,6 +228,8 @@ function handlemsg(msg) {
         case "system_prompt":
             document.getElementById("systemprompt").innerText = msg.text;
             break;
+        case "restart":
+            showScr("whowill");
     }
 }
 
@@ -241,4 +243,9 @@ function startEndReel() {
             el.style.display = '';
         }, 1000 * index);
     });
+}
+
+function goAgain() {
+    showScr("whowill");
+    conn.send({ state: "restart" });
 }
