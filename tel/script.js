@@ -136,6 +136,8 @@ function genRandWord() {
 }
 
 function DoDraw() {
+
+    resizeCanvas();
     var word = genRandWord();
     var article = /^[aeiou]/i.test(word) ? 'an' : 'a';
     document.getElementById("drawWhat").innerText = article + ' ' + word;
