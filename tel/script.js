@@ -136,8 +136,6 @@ function genRandWord() {
 }
 
 function DoDraw() {
-
-    resizeCanvas();
     var word = genRandWord();
     var article = /^[aeiou]/i.test(word) ? 'an' : 'a';
     document.getElementById("drawWhat").innerText = article + ' ' + word;
@@ -146,6 +144,7 @@ function DoDraw() {
     conn.send({ state: "system_prompt", text: (article + ' ' + word) });
     startTimer(letthemguess)
     showScr("painting");
+    resizeCanvas();
 }
 
 function DoGuess() {
