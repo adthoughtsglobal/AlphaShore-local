@@ -128,7 +128,7 @@ function genRandWord() {
         "grape", "peach", "cheese", "cookie", "cake", "tree", "bottle", "brush", "comb", "mirror",
         "glasses", "drum", "guitar", "violin", "kite", "balloon", "rocket", "mountain", "river", "bridge",
         "tent", "tooth", "toothbrush", "bucket", "mop", "broom", "soap", "towel", "glove", "ring",
-        "watch", "wallet", "fan", "remote", "television", "radio", "camera", "mouse", "keyboard", "laptop"
+        "watch", "wallet", "fan", "remote", "television", "radio", "camera", "mouse", "keyboard", "laptop", "watermelon", "anything you like", "the other person"
     ];
 
     var index = Math.floor(Math.random() * words.length);
@@ -139,7 +139,9 @@ function DoDraw() {
     var word = genRandWord();
     var article = /^[aeiou]/i.test(word) ? 'an' : 'a';
     document.getElementById("drawWhat").innerText = article + ' ' + word;
-
+    document.getElementById("systemprompt").innerText = article + ' ' + word;
+    
+    conn.send({ state: "system_prompt", text: (article + ' ' + word) });
     startTimer(letthemguess)
     showScr("painting");
 }
@@ -179,17 +181,24 @@ function letthemguess() {
     const dataUri = canvas.toDataURL('image/png');
 
     conn.send({ state: "drawing_complete", src: dataUri });
+    document.getElementById("endreelimg").src = dataUri;
     showScr("waitgu");
     startTimer(endsession);
 }
 
 function guess() {
-    startTimer(endsession);
+    startTimer(submitguess);
     showScr("review");
 }
 
-function endsession() {
+function submitguess() {
+    conn.send({ state: "guess_img", text: document.getElementById("itisinput").value });
+    document.getElementById("whattheyguessed").innerText = document.getElementById("itisinput").value;
+    endsession();
+}
 
+function endsession() {
+    startEndReel();
 }
 
 showScr("auth")
@@ -202,6 +211,7 @@ function imdrawing() {
 }
 
 function handlemsg(msg) {
+    console.log(msg)
     switch (msg.state) {
         case "declare_drawing":
             gameType = "gu";
@@ -210,5 +220,25 @@ function handlemsg(msg) {
             break;
         case "drawing_complete":
             document.getElementById("guesscanvas").src = msg.src;
+            document.getElementById("endreelimg").src = msg.src;
+            break;
+        case "guess_img":
+            document.getElementById("whattheyguessed").innerText = msg.text;
+            break;
+        case "system_prompt":
+            document.getElementById("systemprompt").innerText = msg.text;
+            break;
     }
+}
+
+function startEndReel() {
+    const messages = document.querySelectorAll('.msg');
+    messages.forEach(el => el.style.display = 'none');
+    showScr("ending");
+
+    messages.forEach((el, index) => {
+        setTimeout(() => {
+            el.style.display = '';
+        }, 1000 * index);
+    });
 }

@@ -58,6 +58,7 @@ canvas, #guesscanvas {
     flex-direction: column;
     align-items: center;
     width: 100%;
+    max-width: 500px;
 }
 
 #drawWhat {
@@ -177,21 +178,25 @@ button {
     }
 }
 
-.rlmsg {
+.msg {
     padding: .5em 1em;
     background: #ffffff;
     border-radius: 0 2em 2em 2em;
     box-shadow: 0 0 8px #2034543d inset, 0 2px 0 #00000036, 0 4px 10px #00000030;
+    align-self: baseline;
+    margin-top: .5em;
+    animation: yeet .3s ease-in;
 }
-
-.rlmsg img {
+.msg img {
     width: 250px;
     border-radius: 1em;
     margin: .3em 0;
+    animation: pop .3s ease-in;
 }
 
-.msg[role="sys"] {
-    align-self: baseline;
+.msg[role="p2"] {
+    border-radius: 2em 0 2em 2em;
+    align-self: end;
 }
 
 #qrCode img, #qrCode canvas {
@@ -207,4 +212,35 @@ button {
     height: fit-content;
     overflow: hidden;
     border-radius: 1em;
+}
+
+
+@keyframes yeet {
+    0% {
+        transform: translateY(1em);
+        opacity: 0;
+    }
+    80% {
+        transform: translateY(-0.2em);
+        opacity: 0.8;
+    }
+    100% {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: none;
+        opacity: 1;
+    }
 }
