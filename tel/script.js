@@ -247,5 +247,8 @@ function startEndReel() {
 
 function goAgain() {
     showScr("whowill");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawing = false;
+    points = [];
     conn.send({ state: "restart" });
 }
